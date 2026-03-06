@@ -31,8 +31,8 @@ func (repo *projectRepository) GetByTitle(title string) (model.Project, error) {
 	return repo.getOneByField("Title", title)
 }
 
-func (repo *projectRepository) GetByUUID(UUID string) (model.Project, error) {
-	return repo.getOneByField("CloudId", UUID)
+func (repo *projectRepository) GetByUUID(uuid string) (model.Project, error) {
+	return repo.getOneByField("UUID", uuid)
 }
 
 func (repo *projectRepository) Create(title, UUID string) (model.Project, error) {

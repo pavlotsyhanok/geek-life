@@ -19,17 +19,19 @@ type ProjectPane struct {
 	list                *tview.List
 	newProject          *tview.InputField
 	repo                repository.ProjectRepository
+	taskRepo            repository.TaskRepository
 	activeProject       *model.Project
 	projectListStarting int // The index in list where project names starts
 }
 
 // NewProjectPane initializes
-func NewProjectPane(repo repository.ProjectRepository) *ProjectPane {
+func NewProjectPane(repo repository.ProjectRepository, taskRepo repository.TaskRepository) *ProjectPane {
 	pane := ProjectPane{
 		Flex:       tview.NewFlex().SetDirection(tview.FlexRow),
 		list:       tview.NewList().ShowSecondaryText(false),
 		newProject: makeLightTextInput("+[New Project]"),
 		repo:       repo,
+		taskRepo:   taskRepo,
 	}
 
 	pane.newProject.SetDoneFunc(func(key tcell.Key) {
@@ -53,7 +55,7 @@ func NewProjectPane(repo repository.ProjectRepository) *ProjectPane {
 func (pane *ProjectPane) addNewProject() {
 	name := pane.newProject.GetText()
 	if len(name) < 3 {
-		statusBar.showForSeconds("[red::]Project name should be at least 3 character", 5)
+		statusBar.showForSeconds("[red::]Project name should be at least 3 characters", 5)
 		return
 	}
 
@@ -142,7 +144,7 @@ func (pane *ProjectPane) RemoveActivateProject() {
 	if pane.activeProject != nil && pane.repo.Delete(pane.activeProject) == nil {
 
 		for i := range taskPane.tasks {
-			_ = taskRepo.Delete(&taskPane.tasks[i])
+			_ = pane.taskRepo.Delete(&taskPane.tasks[i])
 		}
 		taskPane.ClearList()
 

@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/pgavlin/femto"
 	"github.com/rivo/tview"
 
 	"github.com/ajaxray/geek-life/model"
-	"github.com/ajaxray/geek-life/util"
 )
 
 var blankCell = tview.NewTextView()
@@ -62,8 +61,12 @@ func makeButton(label string, handler func()) *tview.Button {
 }
 
 func ignoreKeyEvt() bool {
-	textInputs := []string{"*tview.InputField", "*femto.View"}
-	return util.InArray(reflect.TypeOf(app.GetFocus()).String(), textInputs)
+	switch app.GetFocus().(type) {
+	case *tview.InputField, *femto.View:
+		return true
+	default:
+		return false
+	}
 }
 
 // yetToImplement - to use as callback for unimplemented features

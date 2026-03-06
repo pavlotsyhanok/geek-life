@@ -73,9 +73,29 @@ sudo mv geek-life /usr/local/bin/geek-life
 geek-life
 ```
 
-Done! *Manage your tasks your way!* 
+Done! *Manage your tasks your way!*
 
-**For Apple Silicon Users:** [@mohammadazeemwani](https://github.com/mohammadazeemwani) is maintaining [this fork](https://github.com/mohammadazeemwani/geek-life/releases) for up-to-date Mac Silicon releases.
+### :hammer_and_wrench: Building from source
+
+This repository now targets **Go 1.25**.
+
+```bash
+make build
+./bin/geek-life
+```
+
+To stamp a release version into the binary:
+
+```bash
+make build VERSION=0.2.0
+```
+
+To run the full local verification suite:
+
+```bash
+make tools
+make ci
+```
 
 ## :keyboard: Keyboard shortcuts
 
@@ -152,10 +172,22 @@ Some More hints:
 
 ## :hammer_and_wrench: Building blocks
 
-- Made with :heart: and [golang](https://golang.org/) 1.14 *(you don't need golang to run it)*
+- Made with :heart: and [golang](https://golang.org/) 1.25 *(you don't need golang to run it)*
 - Designed with [tview](https://github.com/rivo/tview) - interactive widgets for terminal-based UI
 - Task Note editor made with [femto](https://github.com/pgavlin/femto)  
 - Datastore is [storm](https://github.com/asdine/storm) - a powerful toolkit for [BoltDB](https://github.com/etcd-io/bbolt)
+
+## :test_tube: Quality checks
+
+Continuous integration now verifies:
+
+- `gofmt`
+- `go mod tidy`
+- `go vet ./...`
+- `go test ./...`
+- `staticcheck ./...`
+- `govulncheck ./...`
+- `go build ./app`
 
 ### Contribute
 

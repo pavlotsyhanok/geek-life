@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync/atomic"
 	"time"
 
 	"github.com/rivo/tview"
@@ -11,6 +12,7 @@ type StatusBar struct {
 	*tview.Pages
 	message   *tview.TextView
 	container *tview.Application
+	token     atomic.Uint64
 }
 
 // Name of page keys
@@ -18,10 +20,6 @@ const (
 	defaultPage = "default"
 	messagePage = "message"
 )
-
-// Used to skip queued restore of statusBar
-// in case of new showForSeconds within waiting period
-var restorInQ = 0
 
 func prepareStatusBar(app *tview.Application) *StatusBar {
 	statusBar = &StatusBar{
@@ -59,15 +57,13 @@ func (bar *StatusBar) showForSeconds(message string, timeout int) {
 
 	bar.message.SetText(message)
 	bar.SwitchToPage(messagePage)
-	restorInQ++
+	token := bar.token.Add(1)
 
 	go func() {
 		time.Sleep(time.Second * time.Duration(timeout))
 
-		// Apply restore only if this is the last pending restore
-		if restorInQ == 1 {
+		if bar.token.Load() == token {
 			bar.restore()
 		}
-		restorInQ--
 	}()
 }

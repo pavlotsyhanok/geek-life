@@ -19,7 +19,10 @@ func NewTaskRepository(db *storm.DB) repository.TaskRepository {
 }
 
 func (t *taskRepository) GetAll() ([]model.Task, error) {
-	panic("implement me")
+	var tasks []model.Task
+	err := t.DB.All(&tasks)
+
+	return tasks, err
 }
 
 func (t *taskRepository) GetAllByProject(project model.Project) ([]model.Task, error) {
@@ -35,10 +38,10 @@ func (t *taskRepository) GetAllByDate(date time.Time) ([]model.Task, error) {
 
 	if date.IsZero() {
 		var allTasks []model.Task
-		err := t.DB.AllByIndex("ProjectID", &allTasks)
-		for _, t := range allTasks {
-			if t.DueDate == 0 {
-				tasks = append(tasks, t)
+		err := t.DB.All(&allTasks)
+		for _, task := range allTasks {
+			if task.DueDate == 0 {
+				tasks = append(tasks, task)
 			}
 		}
 
@@ -56,12 +59,18 @@ func (t *taskRepository) GetAllByDateRange(from, to time.Time) ([]model.Task, er
 	return tasks, err
 }
 
-func (t *taskRepository) GetByID(ID string) (model.Task, error) {
-	panic("implement me")
+func (t *taskRepository) GetByID(id int64) (model.Task, error) {
+	var task model.Task
+	err := t.DB.One("ID", id, &task)
+
+	return task, err
 }
 
-func (t *taskRepository) GetByUUID(UUID string) (model.Task, error) {
-	panic("implement me")
+func (t *taskRepository) GetByUUID(uuid string) (model.Task, error) {
+	var task model.Task
+	err := t.DB.One("UUID", uuid, &task)
+
+	return task, err
 }
 
 func (t *taskRepository) Create(project model.Project, title, details, UUID string, dueDate int64) (model.Task, error) {

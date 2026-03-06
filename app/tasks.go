@@ -48,11 +48,17 @@ func NewTaskPane(projectRepo repository.ProjectRepository, taskRepo repository.T
 		case tcell.KeyEnter:
 			name := pane.newTask.GetText()
 			if len(name) < 3 {
-				statusBar.showForSeconds("[red::]Task title should be at least 3 character", 5)
+				statusBar.showForSeconds("[red::]Task title should be at least 3 characters", 5)
 				return
 			}
 
-			task, err := taskRepo.Create(*projectPane.GetActiveProject(), name, "", "", 0)
+			activeProject := projectPane.GetActiveProject()
+			if activeProject == nil {
+				statusBar.showForSeconds("[red::]Select a project before creating tasks", 5)
+				return
+			}
+
+			task, err := pane.taskRepo.Create(*activeProject, name, "", "", 0)
 			if err != nil {
 				statusBar.showForSeconds("[red::]Could not create Task:"+err.Error(), 5)
 				return
@@ -126,7 +132,7 @@ func (pane *TaskPane) LoadProjectTasks(project model.Project) {
 	var tasks []model.Task
 	var err error
 
-	if tasks, err = taskRepo.GetAllByProject(project); err != nil && err != storm.ErrNotFound {
+	if tasks, err = pane.taskRepo.GetAllByProject(project); err != nil && err != storm.ErrNotFound {
 		statusBar.showForSeconds("[red::]Error: "+err.Error(), 5)
 	} else {
 		pane.SetList(tasks)
@@ -197,14 +203,25 @@ func (pane *TaskPane) ActivateTask(idx int) {
 
 // ClearCompletedTasks removes tasks from current list that are in completed state
 func (pane *TaskPane) ClearCompletedTasks() {
+	remaining := make([]model.Task, 0, len(pane.tasks))
 	count := 0
-	for i, task := range pane.tasks {
-		if task.Completed && pane.taskRepo.Delete(&pane.tasks[i]) == nil {
-			pane.list.RemoveItem(i)
-			count++
+
+	for i := range pane.tasks {
+		task := pane.tasks[i]
+		if !task.Completed {
+			remaining = append(remaining, task)
+			continue
 		}
+
+		if err := pane.taskRepo.Delete(&pane.tasks[i]); err == nil {
+			count++
+			continue
+		}
+
+		remaining = append(remaining, task)
 	}
 
+	pane.SetList(remaining)
 	statusBar.showForSeconds(fmt.Sprintf("[yellow]%d tasks cleared!", count), 5)
 }
 
@@ -214,7 +231,7 @@ func (pane *TaskPane) ReloadCurrentTask() {
 	taskDetailPane.SetTask(pane.activeTask)
 }
 
-func (pane TaskPane) setHintMessage() {
+func (pane *TaskPane) setHintMessage() {
 	if len(projectPane.projects) == 0 {
 		pane.hint.SetText("Welcome to the organized life!\n------------------------------\n Create TaskList/Project at the bottom of Projects pane.\n (Press p,n) \n\nHelp - https://bit.ly/cli-task")
 	} else {

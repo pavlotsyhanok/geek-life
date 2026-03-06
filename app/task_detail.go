@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"time"
@@ -133,7 +132,7 @@ func (td *TaskDetailPane) updateToggleDisplay() {
 
 func (td *TaskDetailPane) toggleTaskStatus() {
 	status := !td.task.Completed
-	if taskRepo.UpdateField(td.task, "Completed", status) == nil {
+	if td.taskRepo.UpdateField(td.task, "Completed", status) == nil {
 		td.task.Completed = status
 		taskPane.ReloadCurrentTask()
 	}
@@ -195,7 +194,7 @@ func (td *TaskDetailPane) prepareDetailsEditor() {
 
 func (td *TaskDetailPane) updateTaskNote(note string) {
 	td.task.Details = note
-	err := taskRepo.Update(td.task)
+	err := td.taskRepo.Update(td.task)
 	if err == nil {
 		statusBar.showForSeconds("[lime]Saved task detail", 5)
 	} else {
@@ -248,7 +247,7 @@ func (td *TaskDetailPane) editInExternalEditor() {
 			return
 		}
 
-		if content, readErr := ioutil.ReadFile(tmpFileName); readErr == nil {
+		if content, readErr := os.ReadFile(tmpFileName); readErr == nil {
 			updatedContent = string(content)
 		} else {
 			messageToShow = "[red::]Failed to load external editing. Try in-app editing by pressing e"
@@ -273,13 +272,13 @@ func (td *TaskDetailPane) editInExternalEditor() {
 
 // writeToTmpFile writes given content to a tmpFile and returns the filename
 func writeToTmpFile(content string) (string, error) {
-	tmpFile, err := ioutil.TempFile("", "geek_life_task_note_*.md")
+	tmpFile, err := os.CreateTemp("", "geek_life_task_note_*.md")
 	if err != nil {
 		return "", err
 	}
 	fileName := tmpFile.Name()
 
-	if err = ioutil.WriteFile(fileName, []byte(content), 0777); err != nil {
+	if err = os.WriteFile(fileName, []byte(content), 0o600); err != nil {
 		return "", err
 	}
 

@@ -17,6 +17,8 @@ import (
 )
 
 var (
+	version = "dev"
+
 	app              *tview.Application
 	layout, contents *tview.Flex
 
@@ -42,7 +44,11 @@ func main() {
 	app = tview.NewApplication()
 	flag.Parse()
 
-	db = util.ConnectStorm(dbFile)
+	var err error
+	db, err = util.ConnectStorm(dbFile)
+	if err != nil {
+		util.FatalIfError(err, "Could not initialize database")
+	}
 	defer func() {
 		if err := db.Close(); err != nil {
 			util.LogIfError(err, "Error in closing storm Db")
@@ -64,7 +70,7 @@ func main() {
 		setKeyboardShortcuts()
 
 		if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
-			panic(err)
+			util.FatalIfError(err, "Run TUI application")
 		}
 	}
 
@@ -115,7 +121,7 @@ func setKeyboardShortcuts() *tview.Application {
 }
 
 func prepareContentPages() *tview.Flex {
-	projectPane = NewProjectPane(projectRepo)
+	projectPane = NewProjectPane(projectRepo, taskRepo)
 	taskPane = NewTaskPane(projectRepo, taskRepo)
 	projectDetailPane = NewProjectDetailPane()
 	taskDetailPane = NewTaskDetailPane(taskRepo)
@@ -130,7 +136,7 @@ func prepareContentPages() *tview.Flex {
 
 func makeTitleBar() *tview.Flex {
 	titleText := tview.NewTextView().SetText("[lime::b]Geek-life [::-]- Task Manager for geeks!").SetDynamicColors(true)
-	versionInfo := tview.NewTextView().SetText("[::d]Version: 0.1.2").SetTextAlign(tview.AlignRight).SetDynamicColors(true)
+	versionInfo := tview.NewTextView().SetText("[::d]Version: " + version).SetTextAlign(tview.AlignRight).SetDynamicColors(true)
 
 	return tview.NewFlex().
 		AddItem(titleText, 0, 2, false).
